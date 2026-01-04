@@ -1,0 +1,304 @@
+{
+	"info": {
+		"_postman_id": "00000000-0000-0000-0000-000000000000",
+		"name": "Azure Cross-Tenant Object Replication MAIN",
+		"description": "Creates a cross-tenant Azure Storage Object Replication (OR) policy using Azure Resource Manager REST APIs.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+	},
+	"item": [
+		{
+			"name": "Get Tenant B Token (Destination)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "client_id",
+							"value": "{{TENANT_B_CLIENT_ID}}"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{TENANT_B_CLIENT_SECRET}}"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "scope",
+							"value": "https://management.azure.com/.default"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://login.microsoftonline.com/{{TENANT_B_TENANT_ID}}/oauth2/v2.0/token",
+					"protocol": "https",
+					"host": [
+						"login",
+						"microsoftonline",
+						"com"
+					],
+					"path": [
+						"{{TENANT_B_TENANT_ID}}",
+						"oauth2",
+						"v2.0",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create OR Policy on Tenant B (Destination)",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{TenantBToken}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"properties\": {\n    \"policyId\": \"{{PolicyGuid}}\",\n    \"sourceAccount\": \"{{SOURCE_STORAGE_RESOURCE_ID}}\",\n    \"destinationAccount\": \"{{DEST_STORAGE_RESOURCE_ID}}\",\n    \"rules\": [\n      {\n        \"ruleId\": \"{{RuleId}}\",\n        \"sourceContainer\": \"{{SOURCE_CONTAINER}}\",\n        \"destinationContainer\": \"{{DEST_CONTAINER}}\"\n      }\n    ]\n  }\n}"
+				},
+				"url": {
+					"raw": "https://management.azure.com/subscriptions/{{DEST_SUBSCRIPTION_ID}}/resourceGroups/{{DEST_RG}}/providers/Microsoft.Storage/storageAccounts/{{DEST_STORAGE_ACCOUNT}}/objectReplicationPolicies/default?api-version=2023-01-01",
+					"protocol": "https",
+					"host": [
+						"management",
+						"azure",
+						"com"
+					],
+					"path": [
+						"subscriptions",
+						"{{DEST_SUBSCRIPTION_ID}}",
+						"resourceGroups",
+						"{{DEST_RG}}",
+						"providers",
+						"Microsoft.Storage",
+						"storageAccounts",
+						"{{DEST_STORAGE_ACCOUNT}}",
+						"objectReplicationPolicies",
+						"default"
+					],
+					"query": [
+						{
+							"key": "api-version",
+							"value": "2023-01-01"
+						}
+					]
+				},
+				"description": "Creates the Object Replication policy on the destination storage account.\n\nPolicyGuid and RuleId must be GUIDs generated beforehand."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Tenant A Token (Source)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "client_id",
+							"value": "{{TENANT_A_CLIENT_ID}}"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{TENANT_A_CLIENT_SECRET}}"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "scope",
+							"value": "https://management.azure.com/.default"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://login.microsoftonline.com/{{TENANT_A_TENANT_ID}}/oauth2/v2.0/token",
+					"protocol": "https",
+					"host": [
+						"login",
+						"microsoftonline",
+						"com"
+					],
+					"path": [
+						"{{TENANT_A_TENANT_ID}}",
+						"oauth2",
+						"v2.0",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Apply OR Policy on Tenant A (Source)",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{TenantAToken}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"properties\": {\n    \"policyId\": \"{{PolicyGuid}}\",\n    \"sourceAccount\": \"{{SOURCE_STORAGE_RESOURCE_ID}}\",\n    \"destinationAccount\": \"{{DEST_STORAGE_RESOURCE_ID}}\",\n    \"rules\": [\n      {\n        \"ruleId\": \"{{RuleId}}\",\n        \"sourceContainer\": \"{{SOURCE_CONTAINER}}\",\n        \"destinationContainer\": \"{{DEST_CONTAINER}}\"\n      }\n    ]\n  }\n}"
+				},
+				"url": {
+					"raw": "https://management.azure.com/subscriptions/{{SOURCE_SUBSCRIPTION_ID}}/resourceGroups/{{SOURCE_RG}}/providers/Microsoft.Storage/storageAccounts/{{SOURCE_STORAGE_ACCOUNT}}/objectReplicationPolicies/{{PolicyGuid}}?api-version=2023-01-01",
+					"protocol": "https",
+					"host": [
+						"management",
+						"azure",
+						"com"
+					],
+					"path": [
+						"subscriptions",
+						"{{SOURCE_SUBSCRIPTION_ID}}",
+						"resourceGroups",
+						"{{SOURCE_RG}}",
+						"providers",
+						"Microsoft.Storage",
+						"storageAccounts",
+						"{{SOURCE_STORAGE_ACCOUNT}}",
+						"objectReplicationPolicies",
+						"{{PolicyGuid}}"
+					],
+					"query": [
+						{
+							"key": "api-version",
+							"value": "2023-01-01"
+						}
+					]
+				},
+				"description": "Applies the destination-created Object Replication policy to the source storage account."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "TenantAToken",
+			"value": ""
+		},
+		{
+			"key": "TenantBToken",
+			"value": ""
+		},
+		{
+			"key": "PolicyGuid",
+			"value": ""
+		},
+		{
+			"key": "RuleId",
+			"value": ""
+		},
+		{
+			"key": "TENANT_B_TENANT_ID",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "TENANT_B_CLIENT_ID",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "TENANT_B_CLIENT_SECRET",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "DEST_SUBSCRIPTION_ID",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "DEST_RG",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "DEST_STORAGE_ACCOUNT",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "TENANT_A_TENANT_ID",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "TENANT_A_CLIENT_ID",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "TENANT_A_CLIENT_SECRET",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "SOURCE_SUBSCRIPTION_ID",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "SOURCE_RG",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "SOURCE_STORAGE_ACCOUNT",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "DEST_CONTAINER",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "SOURCE_CONTAINER",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "DEST_STORAGE_RESOURCE_ID",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "SOURCE_STORAGE_RESOURCE_ID",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
